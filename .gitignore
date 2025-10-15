@@ -1,0 +1,33 @@
+cat > .gitignore <<'EOF'
+# big/raw data
+data/
+*.fa
+*.fasta
+*.fna
+*.fa.gz
+*.fasta.gz
+*.fna.gz
+
+# EDTA & other pipeline outputs
+EDTA_annotation/
+repeatmasker/
+*.out.gff
+*.out.bed
+*.masked.*
+
+# temporary / cache
+*.tmp
+*.temp
+*.swp
+*.bak
+*.log
+*.err
+*.out
+
+# python / R cruft
+__pycache__/
+.Rhistory
+.Rproj.user/
+.env
+.venv/
+EOF
