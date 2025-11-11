@@ -1,33 +1,15 @@
-cat > .gitignore <<'EOF'
-# big/raw data
-data/
-*.fa
-*.fasta
-*.fna
-*.fa.gz
-*.fasta.gz
-*.fna.gz
+# ignore everything
+*
 
-# EDTA & other pipeline outputs
-EDTA_annotation/
-repeatmasker/
-*.out.gff
-*.out.bed
-*.masked.*
+# allow traversing directories
+!*/
 
-# temporary / cache
-*.tmp
-*.temp
-*.swp
-*.bak
-*.log
-*.err
-*.out
+# keep this file
+!.gitignore
+!.md
 
-# python / R cruft
-__pycache__/
-.Rhistory
-.Rproj.user/
-.env
-.venv/
-EOF
+# keep the scripts dir and its .sh files
+!scripts/
+!scripts/*.sh
+!scripts/*.R
+
