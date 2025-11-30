@@ -6,7 +6,7 @@ TEs are moving elements of great importance in genome evolution, and overly repr
 
 They are broadly categorized into Class I DNA retrotransposons and Class II DNA transposons due to their difference in transposition mechanisms:
 - Class I TEs have a copy-paste mecahnism, using an RNA intermediate to increase their copy number in the genome. 
-- Class II TEs have a cut-adn-past mechanism, transposing directly via DNA. 
+- Class II TEs have a cut-and-past mechanism, transposing directly via DNA. 
 
 In this part, we are going to use Extensive de novc TE Annotator EDTA to annotate TEs in our Arabidopsis accession and classify them using TEsorter. Since eukaryotic genomes are repeat-rich, it is necessary to mask them up front such that downstream tools are not misinterpreting homologies and falsy alignemnts that can arise from them. This allows for better homology and orthology annotation later, but the biology of TEs themselves can be very informative, notably through their effect on genome size and the recentness of their activity in genome evolution. 
 
@@ -44,34 +44,37 @@ The output files are canonical classification table .cls.tsv, and per-superfamil
 Run 01c_run_clade_plots.sh
 
 It produces a series of histograms of LTR pair identity on the x-axis, for both Copia and Gypsy clades. y-axis shows counts per bin, capped at 8 (there might by more copies in total). An identity of 1.00 signifies very recent insertions, whereas LTR-RTs with identities below 0.95 signify older insertions. It is to be noted that quick cout reports showed 60 Copia and 85 Gypsy LTRs, but also 436 NA, which explains the empty space as many LTRs lacked a clade label. 
-We can appreciate that, for our TE set, there are clear differences with Gypsy clades more present than Copia. Nonetheless, both show many clades (Ale, Ivana, SIRE and Tork for Copia, Athila, Reina, Retand and Tekay for Gypsy) with very recent insertions (identity at max 1.00) and less clades contained older insertions (notably Bianca for Copia and Retand, Reina and Athila for Gypsy, with identities between 0.85-0.90). This suggests that the accession's genome is not fixed, but rather ungoing TE-host dynamics, with lineage heterogeneity as shown by the difference in age and abundance profiles between Copia and Gypsy adn well as clades within them. 
+We can appreciate that, for our TE set, there are clear differences with Gypsy elements more present than Copia. Nonetheless, both show many families (Ale, Ivana, SIRE and Tork for Copia, Athila, Reina, Retand and Tekay for Gypsy) with very recent insertions (identity at max 1.00) and less clades contained older insertions (notably Bianca for Copia and Retand, Reina and Athila for Gypsy, with identities between 0.85-0.90). This suggests that the accession's genome is not fixed, but rather ongoing TE-host dynamics, with lineage heterogeneity as shown by the difference in age and abundance profiles between Copia and Gypsy and well as families within them. 
 
 #### Visualizing TE superfamilies across contigs
-Once EDTA has ran completely, the .mod.EDTA.TEanno.sum is outputed and gives indications as per the total TE content of our genome's accession. we can see that there is a total of 22528520 bp that are interspersed TEs which represents 15.14% of the genome (148809274 bp). The number of hits was 32572. These are all the TEs EDTA has masked for downstream analysis. 
+Once EDTA has ran completely, the .mod.EDTA.TEanno.sum is outputed and gives indications as per the total TE content of our genome's accession. We can see that there is a total of 32572 TEs, which represents 22528520 bp or 15.14% of the genome (148809274 bp). These are all the TEs EDTA has masked for downstream analysis. 
+
 The most abundant superfamily is LTR unknown category, which represent 6.29% of the total genome. Helitrons (3.21%) and Gypsy (2.05%) are next, followed by Copia (0.64%). This is consistent with previous LTR analysis showing a higher abundance of Gypsy clades compared to Copia. 
 
-To visualize the distirbution of TEs across our contigs, we use the circlize R package. The following wrapper scripts creates the FASTA indexation of our assembly such that it can be plotted through the R script 02b_circlize_te_density.R
+To visualize the distribution of TEs across our contigs, we use the circlize R package. The following wrapper scripts creates the FASTA indexation of our assembly such that it can be plotted through the R script 02b_circlize_te_density.R
 
 Run 02a_run_circlize.sh
 
-The output plots show slices representing the 10 longest scaffolds clockwise, where the ticks mark the Mb. Stacked tracks or coloured rings represent a different TE superfamily. The height of a ring at a given position is its density in fraction of basis in that 100 kbo window annotated a superfamily, the taller the denser. Density is relative per window and different rings are not normalized to the same maximum, so only shapes and peaks should be compared at given positions rather than absolute heights across tracks. 
+The output plots show slices representing the 10 longest scaffolds clockwise, where the ticks mark Mbp. Stacked tracks or coloured rings represent a different TE superfamily. The height of a ring at a given position is its density in fraction of basis in that 100 kbp window annotated a superfamily, the taller the denser. Density is relative per window and different rings are not normalized to the same maximum, so only shapes and peaks should be compared at given positions rather than absolute heights across tracks. 
 We can clearly appreciate scaffold sectors where serveral rings flare together, some overlaps and differences between the different TE families distributions across the contigs. 
 
 #### Clade-level classifiction based on protein domains 
-Using TEsorter, we can refine our analysis on LTR-RTs Copia and Gypsy using the .mod.EDTA.TElib.fa consensus TE library file outputed by EDTA, which contains all the family representative with mxied classes of TE. 
+Using TEsorter, we can refine our analysis on LTR-RTs Copia and Gypsy using the .mod.EDTA.TElib.fa consensus TE library file outputed by EDTA, which contains all the family representative with mixed classes of TE. 
 
-The first step is to subset Copy and Gypsy squences to speed the TEsorter as well as avoid domains hits from non-LTR elements, and make clade calls interpretable. 
+The first step is to subset Copy and Gypsy sequences to speed the TEsorter as well as avoid domains hits from non-LTR elements, and make clade calls interpretable. 
 
 Run 03a_extract_copia_gypsy.sh
+
 This extract consensus sequences FASTA files for Copia and Gypsy superfamilies.
 
 Run 03b_tesorter_classification_count.sh
-Taking the Copia and Gypsy consensus FASTAS previously extracted from the EDTA's TE library, we run TEsorter Rexdb-plant to assign clade-level labels o those sequences. Then, we normalize heterogeneous TEsorter TSV into a TE/SUPERFAMILY/CLADE hierarchy table and map thes clade labels bock onto our genome-annotation GFF to count how many annotated elements fall into each clade.
-The main run produces .rexdb-plant-dom-faa that contains annotated protein sequences that can be used for TE phylogenetic analysis, as well as rexdb-plant.cls.tsv that contains the actual classification of TEs into their classes, orders and families, among other files. Moreover, we parse these files to produce other useful TSVs like tesorter_all_class.tsv serving as master classification table, and count files: of conesnesus sequences per clade, per superfamily and clade pair and of annotated fenome elements per clade. 
+
+Taking the Copia and Gypsy consensus FASTAS previously extracted from the EDTA's TE library, we run TEsorter Rexdb-plant to assign clade-level labels on those sequences. Then, we normalize heterogeneous TEsorter TSV into a TE/SUPERFAMILY/CLADE hierarchy table and map these clade labels back onto our genome-annotation GFF to count how many annotated elements fall into each clade.
+The main run produces .rexdb-plant-dom-faa that contains annotated protein sequences that can be used for TE phylogenetic analysis, as well as rexdb-plant.cls.tsv that contains the actual classification of TEs into their classes, orders and families, among other files. Moreover, we parse these files to produce other useful TSVs like tesorter_all_class.tsv serving as master classification table, and count files: of consensus sequences per clade, per superfamily and clade pair and of annotated fenome elements per clade. 
 
 This time, only 35 Gypsy clades and 26 Copia elements were found. Here, using the complete TEanno library gives a measure of abundance, whereas previous LTR library can tell about recency.  
 
-#### Dating and estimatio of insertion age of TE
+#### Dating and estimation of insertion age of TE
 The age of a TE, which refers to the time of its insertion, can be estimated by measuring the divergence of its sequence from a consensus one, under the assumtion that copies of the same TE family originated from a single active element and that at the time of insertion, all copies are identical but over time, they accumulate mutations. The more divergent the copy becomes, the older it can be. 
 For this, we are going to exploit the RepeatMasker's table of TE that were found in our genome by EDTA. 
 
@@ -104,6 +107,7 @@ For each contig, it:
 - Ran ab initio preictors using Augustus with arabidopsis species model 
 - Combined evidence and predictions into gene models, even alternatice splicing when supported. 
 - Wrote per-contig outputs (GFFs and per-contig FASTAS) inside datastore. 
+
 However, MAKER does not concatenate per-contig results: we need to merge them at the end using a helper script as well as the master index that records, for every contig chunk, the path to its run directory as well as its status. 
 
 Run 05c_maker_merge.sh
@@ -114,8 +118,8 @@ The merge script will read the master index as well as
     - -n: noseq, GFF without that embedded FASTA which is sometime preferable. 
 - fasta_merge: grabs predicted transcripts and proteins from all contigs into two FASTAs.
 
-There are 31767 gene loci predicted by maker (features of type gene) and 37761 mRNA models (highly suppoorted: 36322 AED ≤ 0.5, 96.2%) which suggests that there are about 1.19 isoforms/gene. (Cross-checked with FASTA files: 37761 proteines and 37761 mRNAs)
-TAIR10 protein coding gene are around 27k; we are about 18% above the reference. Inflations drivers can by allele duplication, fragmented model split by repeats, and cross-species evidence from UniProt Virididplantae.
+There are 31767 gene loci predicted by maker (features of type gene) and 37761 mRNA models (highly supported: 36322 AED ≤ 0.5, 96.2%) which suggests that there are about 1.19 isoforms/gene. (Cross-checked with FASTA files: 37761 proteins and 37761 mRNAs)
+TAIR10 protein coding genes are around 27k; we are about 18% above the reference. Inflations drivers can by allele duplication, fragmented model split by repeats, and cross-species evidence from UniProt Virididplantae.
 Next, we are going to refine the gene models using InterProScan to annotate domains from Pfam, superfamilies and mapping these IDs to GO terms. 
 With this, we can flag TE-like proteins that contain RT, integrases and transposes to purge them further, give support to weak AED models with conserved models and get function labels. 
 First, we need to create an ID map from the NOSEQ GFF:
@@ -128,7 +132,7 @@ Run 05e_run_interproscan.sh
 
 After gene domain annotation,  29975 / 37761 (79.4%) proteins got at least one hit and are annotated. mRNAs with any InterPro/Pfam tag in the GFF summed to 29975, and 18869 had mRNAs with GO terms added. 
 
-Now to assess the quality of our predictions and annotations, we can measure the Anootation Edit Distance AED, that ranges from 0 to 1 where 0 is perfect evidnece support and 1 no support. This measure is computed per mRNA by comparing the predicted features to aligned evidence from RNA-seq assemblies and proteins. It is an overlap of sensitivity (SN), the fraction of evidence covered by the model and precision (PPV), the fraction of the model covered by evidence such taht AED = 1- (SN + PPV)/2.
+Now to assess the quality of our predictions and annotations, we can measure the Annotation Edit Distance AED, that ranges from 0 to 1 where 0 is perfect evidence support and 1 no support. This measure is computed per mRNA by comparing the predicted features to aligned evidence from RNA-seq assemblies and proteins. It is an overlap of sensitivity (SN), the fraction of evidence covered by the model and precision (PPV), the fraction of the model covered by evidence such taht AED = 1- (SN + PPV)/2.
 
 Run 05f_run_AED.sh
 
@@ -186,25 +190,75 @@ To grasp what we have been doing so far, the assembly and its annotations can be
 
 Run 06e_align_transcript.sh
 
-This produces a BAM file that can be added to Geneious track.
-
-
-
-
-
-
-
-
+This produces a BAM file that can be added to a Geneious track.
 
 ## Functional Annotation
 From the predicted proteins from MAKER and the filtered GFF describing gene models, which are structurally correct and well-supported provided their AEDs, the aim is to attach biological meaning by comparing predicted proteins to curated references. 
 We are using two complementary references: 
 - UniProt (Viridiplantae, reviewed): contains high-quality, manually curated proteins with names, functions and GO terms. 
-- TAIR10 representative models: gold-standard gene set, great for closest Arabidopses otholog
-
-
+- TAIR10 representative models: gold-standard gene set, great for closest Arabidopsis othologs
 
 First, we are using BLASTP to compare our protein sequences against an UniProt curated database. BLASTP will find sequence similarity: hits with strong scores (which have low E-value and high bitscore) indicate homology to known proteins. If they are similar, we can transfer putative function to our model. This only tells us about the likely function of an anonymous ORF. 
-From the hits returned by BLAST, we are sorting by query ID and by bitscore in descending order. The first per query is kept, since it is the most confident homolog. We want to keep on name per protein for downstream labelling for the standard summary. 
-To inject the function back into our files, we are using two MAKER helpers: maker_functional_fasta which takes UniProt FASTA, the besthits and our protein FASTA and outputs a new protein FASTA where headers include UniProt names and accession to see the putative functions in the header, and maker_functional_gff which takes UniProt FASTA, the full BLAST table and our GFF and outputs a GFF with extra attributes, reflecting UniProt info so genome browsers display functions alongside gene models. 
 
+Run 07a_uniprot_annotation.sh 
+
+BLASTP is used with our MAKER proteins against the UniProt reviewed viridiplantae DB, the output is given by -outfmt 6 in tabular format, abd the significance threshold is set to 1e-5 through -evalue option. We are also keeping up to 10 top hits per query with -max_target_seqs. 
+After BLASTing the filtered proteins against the reviewed UniProt DB, the hits are sorted by query ID and by bitscore in descending order. The first per query is kept, since it is the most confident homolog. We want to keep on name per protein for downstream labelling for the standard summary. 
+To inject the function back into our files, we are using two MAKER helpers: maker_functional_fasta which takes UniProt FASTA, the besthits and our protein FASTA and outputs a new protein FASTA where headers include UniProt names and accession to see the putative functions in the header, and maker_functional_gff which takes UniProt FASTA, the full BLAST table and our GFF and outputs a GFF with extra attributes, reflecting UniProt information so genome browsers display functions alongside gene models. 
+
+The same analysis is done with TAIR10, with an additional grep to Flowering Locus C (FLC) AT5G10140 to check if our annotation includes it for validation. It is to be noted that we have made our own local TAIR10 protein BLAST DB.
+
+Run 07b_runTAIR10_besthits.sh
+
+Additionally, scripts 07a_QC_functional_annotation.R,  07c_uniprot_qc_stats.sh and 07c_unirpot_qc_plots.R can be run to provide summary statistics and tables. 
+
+Over the 37759 total proteins that were annotated with MAKER, 29386 recovered a hit with UniProt (77.83%) and 36626 with TAIR10 (97.00%). Thus, a large majority of the ptoeins have a hit to reviewed UniProt viridiplantae, corresponding to well-characterized genes, while 8373 proteins appear to be less well-characterized. Nonetheless, almost all proteins have at least one homolog in TAIR10. The set overlaps shows that 29176 (77.27%) proteins are commonly found in UniProt and TAIR10, while 7450 (19.73%) are TAIR10-only hits and 210 (0.56%) are UniProt-only. The amount of no hit in either set was 923 (2.44%). 
+Notably, we were able to retrieve FLC annotation from our TAIR best hits: 
+Target matches (TAIR besthits):
+qseqid	sseqid	pident	length	evalue	bitscore
+IST0000909-RA	AT5G10140.1	100	196	8.89e-142	392
+
+This can be mapped to our InterProScan output: 
+grep '^IST0000909-RA' output.iprscan.tsv
+
+IST0000909-RA	fd80d3157704c71c9fed7b18b0983286	196	Pfam	PF01486	K-box region	89	164	2.2E-9	T	04-11-2025	IPR002487	Transcription factor, K-box	GO:0003700(InterPro)|GO:0005634(InterPro)|GO:0006355(InterPro)	-
+IST0000909-RA	fd80d3157704c71c9fed7b18b0983286	196	Pfam	PF00319	SRF-type transcription factor (DNA-binding and dimerisation domain)	10	57	1.6E-20	T	04-11-2025	IPR002100	Transcription factor, MADS-box	GO:0003677(InterPro)|GO:0046983(InterPro)	-
+GO:0005634 is the nucleus term and GO:0006355 is regulation of DNA-templated transcription, GO:0003677 is DNA binding and finally GO:0046983 is protein dimerization activity. The putative function of FLC can thus be infered as a dimer transcription factor, since it is located in the nucleus and binds DNA. It is what is expected for that well-known gene and gives confidence in our annotation. 
+
+## Comparative Genomics with OrthoFinder and GENESPACE
+Finally, we are going to compare our accession's genome to five other published and annotated genomes. In that end, GENESPACE R package is exploited to build synteny and orthology across these accessions. GENESPACE uses DIAMOND2, which is a BLAST-like tool that allows to get hits and OrthoFinder to identify orthogroups. It then extracts syntenic regions using graph and clustering methods. This allows to define gene positions across our genomes. 
+
+OrthoFinder clusters the peptides across species into orthogroups and then can arhologues; GENESPACE then takes these orthogroups and their genomic positios to find syntenic blocks which are collinear runs of orthologous genes.
+The isoform stripping is to match the expected input for GENESPACE and OrthoFinder, that is one peptide per gene, the representative one. 
+
+The first step is to prepare GENESPACE files, which for each genome requires: 
+- A BED file contianing the coordinates for each gene, formatted as chr, start, end, geneID (0-based start)
+- A FASTA file of the peptide sequences which headers that match the gene names in the BED file
+
+Thus for each accession, and to compare them to the reference genome in TAIR10, we create a BED file by extracting the position of each gene from the filtered GFF3 file. Then, we prepare a FASTA file with the longest protein sequences for the identified genes. 
+
+Run 08a_genescape_layout.sh
+
+This produces the BED and FASTA for our accession. We are also interested in other accessions and can create BED and FASTA for them with the next script: 
+
+Run 08b_add_accession.sh
+
+Now we can run GENEPACE to get orthogroups with OrthoFinder and synteny with MCScanX as well as the pangenome matrix anchored to our TAIR10 reference. The pipeline is to use DIAMOND all against all, then OrthoFinder to find orthogroups and orthologs, MCScanX for collinearity and GENESPACE to merge orthology and synteny into the pangenes matrix. 
+
+Run 08d_genespace_run.sh 
+
+This launches the R script with the GENESPACE pipeline. 
+
+GENESPACE builds syntenic blocks between each accession and the reference TAIR10; those blocks are then phased along the reference. Then, it is possible to visualize them through riparian plots showing multi-genome synteny. Each genome is stacked vertically,  and the length of each chromosome/ contig segment is proportional to its physical length in bp such that all rows share the same physical scale. In our accession, while there are many braiding patterns in our assembly which usually denote inversions, these are exclusively end to end contigs, signifiying that they are artificial inversions; if we switch the whole contig, it should perfectly match to the reference and other genomes. 
+
+Now, to further process pangenome information, we are provided with:
+
+Run 08e_process_pangenome.R
+
+This loads the pangenome_matrix.rds from GENESPACE and keeps list-columns one per genome where each cell is a vector of gene IDs in that orthogroup for that genome. It the drops out the out-of-synteny IDs and tags each orthogroup as core, accessory or species specific. It converts each list to counts and summarizes genes per genome by category, building a frequency plots: how many othogroups and genes appear in 1 to n genomes. 
+
+For visualization:
+
+Run 08f_plots_pangenome.R
+
+This script takes the summary tables produced by the pangenome processing step and generates plots describing the core, accoessry and accession-specific composition of the genes sets and the pangenome frequency spectrum. 

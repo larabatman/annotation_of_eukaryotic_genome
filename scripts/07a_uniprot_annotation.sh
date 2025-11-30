@@ -9,26 +9,26 @@
 
 set -Eeuo pipefail
 
-# -------------------- Directories --------------------
+#----- CONFIG -----
 FINAL_DIR="/data/users/${USER}/annotation_of_eukaryotic_genome/annotation/final"
 COURSEDIR="/data/courses/assembly-annotation-course/CDS_annotation"
 MAKERBIN="${COURSEDIR}/softwares/Maker_v3.01.03/src/bin"
 
-# -------------------- Inputs --------------------
+#----- INPUTS ------
 PROT_IN="${FINAL_DIR}/istisu1.bp.p_ctg.proteins.renamed.filtered.fasta"
 GFF_IN="${FINAL_DIR}/filtered.genes.renamed.gff3"
 
-# Curated UniProt (Viridiplantae reviewed) FASTA; BLAST DB already built
+# Curated UniProt (Viridiplantae reviewed) FASTA; BLAST DB already built and given in course folder
 UNIPROT_FA="${COURSEDIR}/data/uniprot/uniprot_viridiplantae_reviewed.fa"
 DB="${UNIPROT_FA}"
 
-# -------------------- Outputs --------------------
+#----- OUTPUTS -----
 BLAST_OUT="${FINAL_DIR}/blastp_vs_uniprot.outfmt6"
 BLAST_BEST="${FINAL_DIR}/blastp_vs_uniprot.besthits"
 FASTA_UNI="${FINAL_DIR}/istisu1.bp.p_ctg.proteins.renamed.filtered.fasta.UniProt"
 GFF_UNI="${FINAL_DIR}/filtered.genes.renamed.gff3.UniProt.gff3"
 
-# -------------------- Tools --------------------
+#----- TOOLS ------
 module load BLAST+/2.15.0-gompi-2021a
 
 # -------------------- Checks --------------------
@@ -38,7 +38,7 @@ module load BLAST+/2.15.0-gompi-2021a
 # Ensure CPU count even if SLURM var is absent
 CPUS="${SLURM_CPUS_PER_TASK:-10}"
 
-# -------------------- BLASTP vs UniProt --------------------
+#----- BLASTP against UNIPROT ------
 echo "[INFO] Running BLASTP vs UniProt reviewed (Viridiplantae) ..."
 # -query: your proteins
 # -db: UniProt reviewed Viridiplantae
@@ -50,7 +50,7 @@ blastp -query "$PROT_IN" -db "$DB" -num_threads "$CPUS" -outfmt 6 -evalue 1e-5 -
 
 [ -s "$BLAST_OUT" ] || { echo "[ERROR] BLAST produced no hits or failed: $BLAST_OUT"; exit 5; }
 
-# -------------------- Best hit per query --------------------
+#----- BEST HIT PER QUERY ------
 echo "[INFO] Keeping best hit per query (highest bitscore) ..."
 # Sort by qseqid asc, bitscore desc; keep first per qseqid
 LC_ALL=C sort -k1,1 -k12,12gr "$BLAST_OUT" | awk '!seen[$1]++' > "$BLAST_BEST"
@@ -62,13 +62,13 @@ echo "[INFO] Writing UniProt names into FASTA headers ..."
 "$MAKERBIN/maker_functional_fasta" "$UNIPROT_FA" "$BLAST_BEST" "$PROT_IN" > "$FASTA_UNI"
 [ -s "$FASTA_UNI" ] || { echo "[ERROR] maker_functional_fasta produced empty output: $FASTA_UNI"; exit 7; }
 
-# -------------------- Inject UniProt into GFF --------------------
+#----- UNIPROT ONTO GFF -----
 echo "[INFO] Writing UniProt names into GFF attributes ..."
 # maker_functional_gff <uniprot.fasta> <blast.outfmt6> <maker.gff3>
 "$MAKERBIN/maker_functional_gff" "$UNIPROT_FA" "$BLAST_OUT" "$GFF_IN" > "$GFF_UNI"
 [ -s "$GFF_UNI" ] || { echo "[ERROR] maker_functional_gff produced empty output: $GFF_UNI"; exit 8; }
 
-# -------------------- Summary --------------------
+#----- SUMMARY -----
 echo "[OK] Done."
 echo "Outputs:"
 echo "  - $BLAST_OUT"

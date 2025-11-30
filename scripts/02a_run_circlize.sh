@@ -8,6 +8,7 @@
 
 set -euo pipefail
 
+#----- CONFIG -----
 WORKDIR="/data/users/lland/annotation_of_eukaryotic_genome"
 FASTA="${WORKDIR}/assembly/hifiasm/istisu1.bp.p_ctg.fa"
 FAI="${FASTA}.fai"
@@ -17,7 +18,7 @@ RSCRIPT_PATH="${WORKDIR}/scripts/02b_circlize_te_density.R"
 
 mkdir -p "$OUTDIR"
 
-# samtools faidx if needed
+#----- OPTIONAL SAMtools faidx FOR FAI -----
 module purge || true
 module load SAMtools || true
 if ! command -v samtools >/dev/null 2>&1; then
@@ -25,10 +26,9 @@ if ! command -v samtools >/dev/null 2>&1; then
 fi
 [ -s "$FAI" ] || samtools faidx "$FASTA"
 
-# R
+#----- LAUNCH RSCRIPT -----
 module load R/4.2.1-foss-2021a || true
 command -v Rscript >/dev/null || { echo "[ERROR] Rscript not found."; exit 3; }
 
-# Run (no args; script is hard-coded)
 Rscript "$RSCRIPT_PATH"
 echo "[OK] circlize done -> $OUTDIR"

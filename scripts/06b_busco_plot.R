@@ -1,25 +1,24 @@
 ######################################
 # BUSCO comparison figures (reads short_summary*.txt)
-# Keeps the original plotting block style; only data-loading is generalized
 ######################################
 
 library(ggplot2)
 library(grid)
 
-# --- Hardcoded inputs ---
+#----- CONFIG -----
 hifiasm_sum <- "/data/users/lland/annotation_of_eukaryotic_genome/assembly/hifiasm/BUSCO/short_summary.specific.brassicales_odb10.hifiasm_busco.txt"
 trinity_sum <- "/data/users/lland/annotation_of_eukaryotic_genome/assembly/Trinity/BUSCO/short_summary.specific.brassicales_odb10.trinity_busco.txt"
 prot_sum    <- "/data/users/lland/annotation_of_eukaryotic_genome/annotation/BUSCO/busco_proteins/short_summary.specific.brassicales_odb10.busco_proteins.txt"
 tran_sum    <- "/data/users/lland/annotation_of_eukaryotic_genome/annotation/BUSCO/busco_transcripts/short_summary.specific.brassicales_odb10.busco_transcripts.txt"
 
-# --- Outputs ---
+#----- OUTPUTS -----
 out_dir <- "/data/users/lland/annotation_of_eukaryotic_genome/annotation/BUSCO"
 dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
 out_genome <- file.path(out_dir, "busco_figure_genome.png")
 out_tx     <- file.path(out_dir, "busco_figure_transcripts.png")
 out_all    <- file.path(out_dir, "busco_figure_all.png")
 
-# --- Plot config (same spirit as template) ---
+# --- Plot config ---
 my_colors <- c("#56B4E9", "#3492C7", "#F0E442", "#F04442")  # S, D, F, M
 my_bar_height <- 0.75
 my_title <- "BUSCO Assessment Results"
@@ -56,12 +55,12 @@ parse_busco <- function(path, label){
   stop("Could not parse BUSCO summary in: ", path, call. = FALSE)
 }
 
-# --- Template-like plotting helper (expects a 'busco' data.frame: species,S,D,F,M,n) ---
+# --- Plotting helper (expects a 'busco' data.frame: species,S,D,F,M,n) ---
 plot_busco <- function(busco, outfile, title_suffix=""){
   my_output <- outfile
   dir.create(dirname(my_output), recursive = TRUE, showWarnings = FALSE)
 
-  # Expand into long format (as in the template)
+  # Expand into long format
   my_species <- rep(busco$species, each=4)
   my_values <- c(rbind(busco$S, busco$D, busco$F, busco$M))
   my_percentage <- with(busco, c(rbind(S/n*100, D/n*100, F/n*100, M/n*100)))
@@ -137,7 +136,7 @@ busco_tx <- rbind(
 )
 plot_busco(busco_tx, out_tx, "Transcriptome: assembly vs annotation (transcripts)")
 
-# All four together (nice overview)
+# All four together
 busco_all <- rbind(
   parse_busco(hifiasm_sum, "assembly (hifiasm)"),
   parse_busco(prot_sum,    "annotation (proteins)"),

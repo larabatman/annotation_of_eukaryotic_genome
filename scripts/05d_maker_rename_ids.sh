@@ -18,7 +18,7 @@ ALL_GFF="../annotation/istisu1.bp.p_ctg.all.gff"
 PROT="../annotation/istisu1.bp.p_ctg.all.maker.proteins.fasta"
 TRAN="../annotation/istisu1.bp.p_ctg.all.maker.transcripts.fasta"
 
-PREFIX="IST"                          # 3–4 letter accession tag
+PREFIX="IST" # 3–4 letter accession tag
 FINAL="../annotation/final"
 mkdir -p "$FINAL"
 cd "$FINAL"

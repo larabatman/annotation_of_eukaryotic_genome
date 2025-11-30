@@ -33,7 +33,7 @@ args=(
   --sensitive 1 # include RepeatModeler for better TE discovery
   --anno 1  # produce final TE annotation with GFF and masked sequences files 
   --threads "${SLURM_CPUS_PER_TASK}"  # use SLURM CPUs
-  --cds "$USE_CDS"
+  --cds "$CDS_LOCAL"
 )
 
 #------ RUN EDTA -----

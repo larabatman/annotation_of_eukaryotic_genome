@@ -9,6 +9,7 @@
 
 set -Eeuo pipefail
 
+#----- CONFIG -----
 WD="/data/users/${USER}/annotation_of_eukaryotic_genome/genespace_workingDirectory"
 RSCRIPT="/data/users/${USER}/annotation_of_eukaryotic_genome/scripts/08c_genespace_run.R"
 COURSEDIR="/data/courses/assembly-annotation-course/CDS_annotation"
@@ -23,6 +24,7 @@ export OMP_NUM_THREADS="$SLURM_CPUS_PER_TASK"
 export LANG=C.UTF-8
 export LC_ALL=C.UTF-8
 
+#----- RUN R SCRIPT GENESPACE -----
 echo "[INFO] Running GENESPACE in container..."
 apptainer exec --bind /data "$IMG" Rscript "$RSCRIPT" "$WD" diamond orthofinder "/usr/local/bin"
 

@@ -1,29 +1,56 @@
 #!/usr/bin/env Rscript
-args <- commandArgs(TRUE)
-if (length(args) < 2) stop("usage: 04d_plot_aed.R <aed_values.tsv> <out.pdf>")
-infile <- args[1]; outfile <- args[2]
 
-x <- scan(infile, quiet=TRUE)
-x <- x[is.finite(x) & x>=0 & x<=1]
-p <- if (length(x)) mean(x<=0.5) else NA_real_
+library(ggplot2)
 
-pdf(outfile, width=8, height=4)
-par(mfrow=c(1,2), mar=c(4,4,3,1))
-breaks <- seq(0,1,by=0.025)
+#----- CONFIG ------
+FINAL_DIR <- "/data/users/lland/annotation_of_eukaryotic_genome/annotation/final"
 
-# Histogram
-hist(x, breaks=breaks, main="AED histogram", xlab="AED", ylab="Count")
-abline(v=0.5, lwd=2)
+AED_VALS_FILE <- file.path(FINAL_DIR, "istisu1.bp.p_ctg.functional.AED.values.tsv")
 
-# ECDF
-if (length(x)) {
-  plot(ecdf(x), main="AED ECDF", xlab="AED", ylab="F(AED)")
-  abline(v=0.5, lwd=2)
-  if (!is.na(p)) abline(h=p, lty=2)
-} else {
-  plot.new(); title("AED ECDF (no data)")
-}
-mtext(sprintf("<=0.5: %s", ifelse(is.na(p),"NA", sprintf("%.1f%%", 100*p))),
-      side=3, adj=1, line=-1)
-dev.off()
-cat(sprintf("[OK] Wrote: %s\n", outfile))
+#Read AED scores (one value per line)
+aedscores <- read.table(AED_VALS_FILE, header = FALSE)
+colnames(aedscores) <- "AED"
+
+#----- ECDF PLOT -----
+p_ecdf <- ggplot(aedscores, aes(x = AED)) +
+  stat_ecdf(geom = "step") +
+  labs(
+    x = "AED",
+    y = "Cumulative fraction of genes"
+  ) +
+  scale_x_continuous(
+    limits = c(0, 1),
+    breaks = c(0, 0.25, 0.5, 0.75, 1.0)
+  ) +
+  geom_vline(xintercept = 0.25, linetype = "dotted") +
+  geom_vline(xintercept = 0.50, linetype = "dotted") +
+  theme_bw()
+
+ggsave(
+  filename = file.path(FINAL_DIR, "istisu1.bp.p_ctg.functional.AED.ecdf.ggplot.pdf"),
+  plot = p_ecdf,
+  width = 5,
+  height = 4
+)
+
+#----- HISTOGRAM AED ------
+p_hist <- ggplot(aedscores, aes(x = AED)) +
+  geom_histogram(binwidth = 0.05, boundary = 0, closed = "left") +
+  labs(
+    x = "AED",
+    y = "Number of genes"
+  ) +
+  scale_x_continuous(
+    limits = c(0, 1),
+    breaks = c(0, 0.25, 0.5, 0.75, 1.0)
+  ) +
+  geom_vline(xintercept = 0.25, linetype = "dotted") +
+  geom_vline(xintercept = 0.50, linetype = "dotted") +
+  theme_bw()
+
+ggsave(
+  filename = file.path(FINAL_DIR, "istisu1.bp.p_ctg.functional.AED.hist.ggplot.pdf"),
+  plot = p_hist,
+  width = 5,
+  height = 4
+)

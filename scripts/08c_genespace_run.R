@@ -1,30 +1,26 @@
 #!/usr/bin/env Rscript
-# Usage:
-#   Rscript genespace_run.R /path/to/genespace_workingDirectory diamond orthofinder /usr/local/bin
 
+#------ CONFIG ------
 suppressPackageStartupMessages(library(GENESPACE))  # container provides this old-API build
 
 args <- commandArgs(trailingOnly = TRUE)
 if (length(args) < 1) stop("Provide the GENESPACE workingDirectory as arg 1.")
 wd <- normalizePath(args[1], mustWork = TRUE)
 
-# Optional: diamond & orthofinder args (kept for completeness; old API finds them on PATH)
 diamond.path     <- if (length(args) >= 2) args[2] else "diamond"
 orthofinder.path <- if (length(args) >= 3) args[3] else "orthofinder"
-
-# IMPORTANT: pass the **directory** that contains MCScanX and MCScanX_h
 path2mcscanx <- if (length(args) >= 4) args[4] else "/usr/local/bin"
 
 message("[INFO] wd: ", wd)
 message("[INFO] path2mcscanx (dir): ", path2mcscanx)
 
-# Discover inputs
+#Genomes that are present:
 pepf <- list.files(file.path(wd, "peptide"),
                    pattern="\\.(fa(sta)?|faa)$", full.names=TRUE, ignore.case=TRUE)
 bedf <- list.files(file.path(wd, "bed"),
                    pattern="\\.bed$", full.names=TRUE, ignore.case=TRUE)
 stopifnot(length(pepf) > 0, length(bedf) > 0)
-
+#We need at least two genomes with matching names in both folders 
 stem <- function(x) sub("\\.[^.]+$", "", basename(x))
 pepNames <- stem(pepf); bedNames <- stem(bedf)
 common <- intersect(pepNames, bedNames)
@@ -45,14 +41,16 @@ sp <- data.frame(
 )
 write.csv(sp, file.path(wd, "species_table.csv"), row.names=FALSE)
 
+#Pick TAIR10 as the reference genome 
 refGenome <- if ("TAIR10" %in% sp$genome) "TAIR10" else sp$genome[1]
 message("[INFO] Genomes: ", paste(sp$genome, collapse=", "))
 message("[INFO] Ref genome: ", refGenome)
 
-# Init (old API)
+#Initialize and run the pipeline 
 gpar <- init_genespace(
   wd = wd,
-  path2mcscanx = path2mcscanx   # <-- DIRECTORY with MCScanX & MCScanX_h
+  path2mcscanx = "/usr/local/bin",
+  verbose = TRUE
 )
 
 # Threads from Slurm
@@ -60,10 +58,10 @@ thr <- as.integer(Sys.getenv("SLURM_CPUS_PER_TASK", "8"))
 gpar$diamond$threads     <- thr
 gpar$orthofinder$threads <- thr
 
-# Old API: single call runs pipeline; do not overwrite completed steps
+#To prevent overwriting on completed steps
 out <- run_genespace(gpar, overwrite = FALSE)
 
-# Pangenome matrix
+#Build and save the pangenome matrix (presence/absence) in reference coordinates
 pg <- query_pangenes(
   out,
   bed = NULL,

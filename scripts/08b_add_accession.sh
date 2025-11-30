@@ -1,12 +1,13 @@
 #!/bin/bash
-# 10a_add_accession.sh
 # Usage:
 #   bash 10a_add_accession.sh ACC_LABEL /path/to/filtered.gff3 /path/to/longest_proteins.fasta
 
 set -Eeuo pipefail
-ACC="$1"
-GFF="$2"
-PFA="$3"
+
+#----- VARIABLE INPUT -----
+ACC="$1" #Accession label
+GFF="$2" #GFF3
+PFA="$3" #
 
 BASE="/data/users/${USER}/annotation_of_eukaryotic_genome"
 GS_ROOT="${BASE}/genespace_workingDirectory"
