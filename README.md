@@ -1,5 +1,5 @@
 # Annotation of Eukaryotic Genomes: Arabidposis thaliana accession
-This documentation aims to describe the annotation protocol used for genome annotation of the Istisu-1 Arabidopsis thaliana assembly that was previously assembled using public HiFi sequencing reads. We are also going to use Trinity assembled RNA-seq public data as evidence to support gene prediction. There are three main sections: identificaiton, classification and dynamics of Trasposable Elements (TEs), Genome annotation and quality control, and functional and comparative genomics. Generally, tools were used through Apptainer with images provided by the course organizers. All plots were produced using R module 4.2.1. 
+This documentation aims to describe the annotation protocol used for genome annotation of the Istisu-1 Arabidopsis thaliana assembly that was previously assembled using public HiFi sequencing reads. We are also going to use Trinity assembled RNA-seq public data as evidence to support gene prediction. Here, genome annotation is going to be decomposed into identification, classification and dynamics of transposable elements (TEs), annotation through the MAKER pipeline, quality assessment, functional annotation and comparative genomics.  Generally, tools were used through Apptainer with images provided by the course organizers. All plots were produced using R module 4.2.1. 
 
 ## Contents
 
@@ -10,8 +10,8 @@ This documentation aims to describe the annotation protocol used for genome anno
   - [Clade-level classification based on protein domains](#clade-level-classifiction-based-on-protein-domains)  
   - [Dating and estimation of insertion age of TE](#dating-and-estimation-of-insertion-age-of-te)  
 - [Annotation of genes with the MAKER pipeline](#annotation-of-genes-with-the-maker-pipeline)  
-- [Quality Assessment of Gene Annotations](#quality-assessment-of-gene-annotations)  
-  - [BUSCO: Quality Assessment of Gene Annotations](#busco-quality-asssessment-of-gene-annotations)  
+- [Quality Assessment of Genome Annotation](#quality-assessment-of-genome-annotation)  
+  - [BUSCO: Quality Assessment of Gene Annotation](#busco-quality-asssessment-of-gene-annotation)  
 - [Functional Annotation](#functional-annotation)  
 - [Comparative Genomics with OrthoFinder and GENESPACE](#comparative-genomics-with-orthofinder-and-genespace)
 
@@ -177,9 +177,9 @@ To further refine and validate MAKER genes, we can use AED to filter out genes t
 AED allows to quantify the agreement between the predicted model and the evidence. The lower the AED score, the better, and generally ≤ 0.5 is accepted as good support.
 InterPro/ GO give domain and GO hits that provide biological plausaibility of predicted proteins, helping to flag TE-like seuqences for removal and giving functional summaries such as pathways and families that can also be used for comparative analyses. 
 
-## Quality Assessment of Gene Annotations
+## Quality Assessment of Genome Annotation
 
-### BUSCO: Quality Asssessment of Gene Annotations
+### BUSCO: Quality Asssessment of Gene Annotation
 To assess the quality og our gene annotation so far, we are going to use BUSCO (version5.4.2) (Benchmarking Universal Single-Copy Orthologs) to infer the completness of our annotation theough the presence/ absence of highly conserved orthologs across a range of taxa. 
 
 Since BUSCO expects one ortholog per gene, keeping multiple isoforms per gene would inflate the Duplicated category falsely. Thus, we are going to first extract the longest, assumed most complete coding isoform from our filtered FASTA files. 
