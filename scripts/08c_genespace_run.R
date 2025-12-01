@@ -1,7 +1,7 @@
 #!/usr/bin/env Rscript
 
 #------ CONFIG ------
-suppressPackageStartupMessages(library(GENESPACE))  # container provides this old-API build
+suppressPackageStartupMessages(library(GENESPACE))  #container provides this old-API build
 
 args <- commandArgs(trailingOnly = TRUE)
 if (length(args) < 1) stop("Provide the GENESPACE workingDirectory as arg 1.")

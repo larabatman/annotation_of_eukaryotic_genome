@@ -1,14 +1,27 @@
 # Annotation of Eukaryotic Genomes: Arabidposis thaliana accession
-This course directly follows the course on Genome and Transcriptome assembly. Here, we are going to annotate the HiFiasm assembly produced during the previous class. We are also going to use the Trinity transcriptome assembly. 
+This documentation aims to describe the annotation protocol used for genome annotation of the Istisu-1 Arabidopsis thaliana assembly that was previously assembled using public HiFi sequencing reads. We are also going to use Trinity assembled RNA-seq public data as evidence to support gene prediction. There are three main sections: identificaiton, classification and dynamics of Trasposable Elements (TEs), Genome annotation and quality control, and functional and comparative genomics. Generally, tools were used through Apptainer with images provided by the course organizers. All plots were produced using R module 4.2.1. 
 
-## Transposable Elements (TE) Annotation 
-TEs are moving elements of great importance in genome evolution, and overly represented in plant genomes. Inside one genome, one can derive orders, superfamilies, families and clades of TEs forming their own phylogeny through structure similarity. 
+## Contents
 
-They are broadly categorized into Class I DNA retrotransposons and Class II DNA transposons due to their difference in transposition mechanisms:
-- Class I TEs have a copy-paste mecahnism, using an RNA intermediate to increase their copy number in the genome. 
-- Class II TEs have a cut-and-past mechanism, transposing directly via DNA. 
+- [Transposable Elements (TE) Annotation](#transposable-elements-annotation)  
+  - [Annotating TEs with EDTA](#annotating-tes-with-edta)  
+  - [Annotation of LTR-RT candidates](#annotation-of-ltr-rt-candidates)  
+  - [Visualizing TE superfamilies across contigs](#visualizing-te-superfamilies-across-contigs)  
+  - [Clade-level classification based on protein domains](#clade-level-classifiction-based-on-protein-domains)  
+  - [Dating and estimation of insertion age of TE](#dating-and-estimation-of-insertion-age-of-te)  
+- [Annotation of genes with the MAKER pipeline](#annotation-of-genes-with-the-maker-pipeline)  
+- [Quality Assessment of Gene Annotations](#quality-assessment-of-gene-annotations)  
+  - [BUSCO: Quality Assessment of Gene Annotations](#busco-quality-asssessment-of-gene-annotations)  
+- [Functional Annotation](#functional-annotation)  
+- [Comparative Genomics with OrthoFinder and GENESPACE](#comparative-genomics-with-orthofinder-and-genespace)
 
-In this part, we are going to use Extensive de novc TE Annotator EDTA to annotate TEs in our Arabidopsis accession and classify them using TEsorter. Since eukaryotic genomes are repeat-rich, it is necessary to mask them up front such that downstream tools are not misinterpreting homologies and falsy alignemnts that can arise from them. This allows for better homology and orthology annotation later, but the biology of TEs themselves can be very informative, notably through their effect on genome size and the recentness of their activity in genome evolution. 
+
+## Transposable Elements Annotation 
+TEs are moving elements of great importance in genome evolution. Within one genome, orders, superfamilies, families and clades of TEs can be identified, forming their own phylogeny through structure similarity.
+
+They are broadly categorized into Class I DNA retrotransposons and Class II DNA transposons due to their difference in transposition mechanisms: Class I TEs have a copy-paste mechanism, using an RNA intermediate to increase their copy number in the genome, whereas Class II TEs have a cut-and-past mechanism, transposing directly via DNA. 
+
+In this part, we are going to use Extensive de novo TE Annotator EDTA version 2.2 to annotate TEs in our Arabidopsis accession and classify them using TEsorter version 1.3.0. Since eukaryotic genomes are repeat-rich, it is necessary to mask them up front such that downstream tools are not misinterpreting homologies and falsy alignments that can arise from them. This allows for better homology and orthology annotation later, but the biology of TEs themselves can be very informative, notably through their effect on genome size and the recentness of their activity in genome evolution. 
 
 ### Annotating TEs with EDTA
 To use EDTA for TE annotation:
@@ -16,13 +29,19 @@ To use EDTA for TE annotation:
 Run script 01a_run_EDTA.sh 
 
 Here, we are using the options: 
+
 --genome: the HiFiasm genome that was previously assembled
+
 --species others: a generic model 
+
 --step all: to run the full EDTA pipeline
+
 --sensitive 1: to use RepeatModeler which allows for higher sensitivity in TE discovery
+
 --cds: the coding sequences of Arabidopsis thaliana reference to avoid labeling true genes as TEs.
 
 Running the EDTA pipeline produces several files, of which 5 are going to be used in downstream analysis: 
+
 - A .mod.EDTA.TElib.fa file: FASTA file with the TE classified up to the superfamily, where each sequence represents a TE family.
 - A .mod.EDTA.TEanno.gff3 file: GFF file with both intact and fragmented TE annotations across the genome. 
 - A .mod.EDTA.intact.gff3 file: Similarly, a GFF3 only containing intact TE annotations, which is helpful to identify recently active or well-conserved TEs. 
@@ -30,9 +49,9 @@ Running the EDTA pipeline produces several files, of which 5 are going to be use
 - A .genome.mod.out inside the .mod.EDTA.anno subfolder: Output from RepeatMasker with the details information on TE copies, and namely their percentage of diversity compared to the reference sequences which is useful for dating TE insertions. 
 
 #### Annotation of LTR-RT candidates
-Once EDTA has finised the identification of raw LTR candidates, it is possible to directly classify these into known clades and superfamilies using TEsorter/REXdb. 
+Once EDTA has finished the identification of raw LTR candidates, it is possible to directly classify these into known clades and superfamilies using TEsorter/REXdb. 
 An LTR-RT inserts with two identical LTRs on 5' and 3'. Over time, these can accumulate substitutions, such that two LTRs diverge. 
-The EDTA pipeline contains discovery tools, such as LTRharvest and LTR_FINDER to find candidate LTR-RTs based on the similar direct repeats flanking an internal region. The, it goes through a curation step with LTR_retriever to validate candidates and provides an identity measure by aligning the two LTR sequences for each element, computing the identity as a measure of the number of matchin aligned bases divided by the alignment length. Then, EDTA writes it as ltr_identity in the GFF, scoring from 0 to 1, where 1 is a very recent insertion, and below 0.95 is considered an older insertion as more substitutions have accumulated. 
+The EDTA pipeline contains discovery tools, such as LTRharvest and LTR_FINDER to find candidate LTR-RTs based on the similar direct repeats flanking an internal region. Then, it goes through a curation step with LTR_retriever to validate candidates and provides an identity measure by aligning the two LTR sequences for each element, computing the identity as a measure of the number of matchin aligned bases divided by the alignment length. Then, EDTA writes it as ltr_identity in the GFF, scoring from 0 to 1, where 1 is a very recent insertion, and below 0.95 is considered an older insertion as more substitutions have accumulated. 
 To study LTR-RTs more in detail, we can also assign superfamily and clades using TEsorter: 
 
 Run 01b_run_TEsorter.sh
@@ -86,7 +105,7 @@ Perl reads each TE copy from the .out file and normalizes divergene from the con
 Run 04b_plot_TE_landscape.sh
 
 This script is a wrapper that launches the R script that was provided through course material to plot the TE divergence binning produced by the previous step. It has been slighlty modified to accomodat our specific working environement as well as to include dating estimates by using the estimated substitution rate for Brassicaceae as r=8.22*10^-9 substitutions per synonymous site per year and the insertion time as T = K/2r, K=sequence divergence. 
-Recent peaks can my appreciated, with Copia spiking at 0.9 Myr. Gypsy appears to dominate between 2-10 Myr, with broad peaking and lots of mass. Overall, Gypsy dynamics are more prominent than Copia, with Copia haveing a very recent burst and a substantial ancient load while Gypsy being more broad, mid-age. Recent Copia activity is thus detectable, but small, most Copia copies are old and ypsy is the main actor, while also accumulating older copies. 
+Recent peaks can be appreciated, with Copia spiking at 0.9 Myr. Gypsy appears to dominate between 2-10 Myr, with broad peaking and lots of mass. Overall, Gypsy dynamics are more prominent than Copia, with Copia having a very recent burst and a substantial ancient load while Gypsy being more broad, mid-age. Recent Copia activity is thus detectable, but small, most Copia copies are old and Gypsy is the main actor, while also accumulating older copies. 
 
 ## Annotation of genes with the MAKER pipeline
 MAKER integrates multiple source of evidence for eukaryotic genome annotation. Namely, it contains ab initio prediction models using tools like Augustus and GeneMark to prdict gene structures based on sequence patterns, but also accepts RNA-seq data which provides evidence of gene expression as well as protein homology-based annotation which uses known protein sequences from related species to predict gene structures with, for example, BLAST to identify conserved genes through alignement between transcripts and known proteins to genome. 
@@ -94,7 +113,7 @@ To begin, we need to generate MAKER control files:
 
 Run 05a_maker_setup_ctl.sh
 
-This scripts creates an annotation working directory and runs maker -CTL to generate the control files. Then, it edits maker_opts.ctl to point to our genome and Trinity transcripts, as well as protien evidence from TAIR and UniProt databases. It disables DFam masking and uses the EDTA TElib for RepeatMasker, and enraples RepearRunner TE proteins. It also uses the pre-trained arabidopsis model from the Augustus database for de novo protein prediction. Since we are going to run MAKER with MPI, the CPUs are kept to 1. 
+This scripts creates an annotation working directory and runs maker -CTL to generate the control files. Then, it edits maker_opts.ctl to point to our genome and Trinity transcripts, as well as protein evidence from TAIR and UniProt databases. It disables DFam masking and uses the EDTA TElib for RepeatMasker, and enables RepeatRunner TE proteins. It also uses the pre-trained arabidopsis model from the Augustus database for de novo protein prediction. Since we are going to run MAKER (version 3.01.03) with MPI, the CPUs are kept to 1. 
 Once the control files are generated, we can run MAKER:
 
 Run 05b_run_MAKER.sh
@@ -102,6 +121,7 @@ Run 05b_run_MAKER.sh
 The script runs MAKER under MPI, a way to run many separate processes by sending messages; here, we are launching 50 MAKER processes passing their results via files.
 Then, MAKER splits the assembly into manageable chunks per contig and built a datastore. Those are hashed buckets, each containing a run directory for the contigs.
 For each contig, it:
+
 - Masked repeats using the EDTA TE library
 - Searched RNA-seq transcripts and protein homology (BLAST/Exonerate) to anchor evidence
 - Ran ab initio preictors using Augustus with arabidopsis species model 
@@ -160,7 +180,7 @@ InterPro/ GO give domain and GO hits that provide biological plausaibility of pr
 ## Quality Assessment of Gene Annotations
 
 ### BUSCO: Quality Asssessment of Gene Annotations
-To assess the quality og our gene annotation so far, we are going to use BUSCO (Benchmarking Universal Single-Copy Orthologs) to infer the completness of our annotation theough the presence/ absence of highly conserved orthologs across a range of taxa. 
+To assess the quality og our gene annotation so far, we are going to use BUSCO (version5.4.2) (Benchmarking Universal Single-Copy Orthologs) to infer the completness of our annotation theough the presence/ absence of highly conserved orthologs across a range of taxa. 
 
 Since BUSCO expects one ortholog per gene, keeping multiple isoforms per gene would inflate the Duplicated category falsely. Thus, we are going to first extract the longest, assumed most complete coding isoform from our filtered FASTA files. 
 
@@ -178,7 +198,7 @@ Run 06b_busco_plot.R
 Comparisons can be made before and after annotation of the assemblies (both hifiasm and trinity). 
 BUSCO metrics are C (Complete), split into S (single-copy) and D (Duplicated), F (Fragmented), M (Missing) and n (total BUSCOs in lineage dataset). Generally, we want high C and low F/M, and high D shows redundancy due to polyploidy or mRNA expression in the Trinity assembly. 
 
-After this, useful summary statistics regarging the quality of our annotation can be retrieved with AGAT, Another GFF/GTF Analysis Toolkit, which summarizes annotation features like genes, mRNA, exons, CDS, UTRs, introns lengths, counts and distirbution. It is useful for QC the structure of the MAKER gene set, quantify its composition and also compare versions pre/ post-filtering, for instance. 
+After this, useful summary statistics regarging the quality of our annotation can be retrieved with AGAT (version1.5.1), Another GFF/GTF Analysis Toolkit, which summarizes annotation features like genes, mRNA, exons, CDS, UTRs, introns lengths, counts and distirbution. It is useful for QC the structure of the MAKER gene set, quantify its composition and also compare versions pre/ post-filtering, for instance. 
 
 Run 06c_run_AGAT.sh
 
@@ -198,7 +218,7 @@ We are using two complementary references:
 - UniProt (Viridiplantae, reviewed): contains high-quality, manually curated proteins with names, functions and GO terms. 
 - TAIR10 representative models: gold-standard gene set, great for closest Arabidopsis othologs
 
-First, we are using BLASTP to compare our protein sequences against an UniProt curated database. BLASTP will find sequence similarity: hits with strong scores (which have low E-value and high bitscore) indicate homology to known proteins. If they are similar, we can transfer putative function to our model. This only tells us about the likely function of an anonymous ORF. 
+First, we are using BLASTP (version 2.15.0) to compare our protein sequences against an UniProt curated database. BLASTP will find sequence similarity: hits with strong scores (which have low E-value and high bitscore) indicate homology to known proteins. If they are similar, we can transfer putative function to our model. This only tells us about the likely function of an anonymous ORF. 
 
 Run 07a_uniprot_annotation.sh 
 
